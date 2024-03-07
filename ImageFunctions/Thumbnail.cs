@@ -116,8 +116,6 @@ namespace ImageFunctions
                             {
                                 HttpHeaders = new BlobHttpHeaders { ContentType = contenttype }
                             };
-
-                            using (var output = new MemoryStream())
                             using (Image<Rgba32> image = Image.Load(input))
                             {
                                 var divisor = image.Width / thumbnailWidth;
@@ -136,8 +134,6 @@ namespace ImageFunctions
                             
                                                             
                             await blobContainerClient.UploadBlobAsync(blobName, output, uploadOptions);
-                            
-                            
                         }
                     }
                     else
