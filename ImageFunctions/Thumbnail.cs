@@ -109,14 +109,7 @@ namespace ImageFunctions
                         var blobName = GetBlobNameFromUrl(createdEvent.Url);
 
                         using (var output = new MemoryStream())
-                        using (Image<Rgba32> image = Image.Load(input))
-                        {
-                            var divisor = image.Width / thumbnailWidth;
-                            var height = Convert.ToInt32(Math.Round((decimal)(image.Height / divisor)));
-
-                            image.Mutate(x => x.Resize(thumbnailWidth, height));
-                            image.Save(output, encoder);
-                            output.Position = 0;
+                      
                             var contenttype = GetContentType(extension);
 
                             var uploadOptions = new BlobUploadOptions
@@ -124,6 +117,24 @@ namespace ImageFunctions
                                 HttpHeaders = new BlobHttpHeaders { ContentType = contenttype }
                             };
 
+                            using (var output = new MemoryStream())
+                            using (Image<Rgba32> image = Image.Load(input))
+                            {
+                                var divisor = image.Width / thumbnailWidth;
+                                var height = Convert.ToInt32(Math.Round((decimal)(image.Height / divisor)));
+                            
+                                image.Mutate(x => x.Resize(thumbnailWidth, height));
+                            
+                                // Adjust the JPEG compression level (quality)
+                                if (encoder is JpegEncoder jpegEncoder)
+                                {
+                                    jpegEncoder.Quality = 50; // Set the desired compression level (0 to 100)
+                                }
+                            
+                                image.Save(output, encoder);
+                                output.Position = 0;
+                            
+                                                            
                             await blobContainerClient.UploadBlobAsync(blobName, output, uploadOptions);
                             
                             
