@@ -70,6 +70,22 @@ namespace ImageFunctions
             return encoder;
         }
 
+        // Determine content type based on file extension
+            private static string GetContentType(string extension)
+            {
+                switch (extension.ToLower())
+                {
+                    case "png":
+                        return "image/png";
+                    case "jpg":
+                    case "jpeg":
+                        return "image/jpeg";
+                    // Add more cases for other supported formats if needed
+                    default:
+                        return "application/octet-stream"; // Default to octet-stream for unknown types
+                }
+            }
+
         [FunctionName("Thumbnail")]
         public static async Task Run(
             [EventGridTrigger]EventGridEvent eventGridEvent,
@@ -101,7 +117,16 @@ namespace ImageFunctions
                             image.Mutate(x => x.Resize(thumbnailWidth, height));
                             image.Save(output, encoder);
                             output.Position = 0;
-                            await blobContainerClient.UploadBlobAsync(blobName, output);
+                            var contenttype = GetContentType(extension);
+
+                            var uploadOptions = new BlobUploadOptions
+                            {
+                                HttpHeaders = new BlobHttpHeaders { ContentType = contenttype }
+                            };
+
+                            await blobContainerClient.UploadBlobAsync(blobName, output, uploadOptions);
+                            
+                            
                         }
                     }
                     else
